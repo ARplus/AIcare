@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>心率检测 - AI护工</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 20px;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            aspect-ratio: 4/3;
+        }
+        
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+        
+        .face-outline {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 70%;
+            border: 3px dashed rgba(255,255,255,0.5);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+        }
+        
+        .forehead-box {
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30%;
+            height: 15%;
+            border: 2px solid #4ade80;
+            background: rgba(74, 222, 128, 0.1);
+            display: none;
+        }
+        
+        .timer {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .btn-primary {
+            display: block;
+            width: 200px;
+            margin: 0 auto 20px;
+            padding: 15px;
+            background: #5b68d8;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary.stop {
+            background: #e53e3e;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        
+        .status.info { background: #e6f2ff; color: #0066cc; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.warning { background: #fff3cd; color: #856404; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        
+        .result-box {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .heart-rate {
+            font-size: 48px;
+            font-weight: bold;
+            color: #e53e3e;
+        }
+        
+        .heart-rate span {
+            font-size: 24px;
+            color: #666;
+            margin-left: 5px;
+        }
+        
+        .heart-icon {
+            display: inline-block;
+            font-size: 30px;
+            animation: heartbeat 1s infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        .wave-canvas {
+            width: 100%;
+            height: 80px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        
+        .info-box {
+            background: #f0f8ff;
+            border-left: 4px solid #5b68d8;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .debug-info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-family: monospace;
+            display: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .show-debug {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💗 心率检测</h1>
+        
+        <div class="status info" id="status">
+            点击开始按钮进行检测
+        </div>
+        
+        <div class="video-wrapper">
+            <video id="video" playsinline autoplay muted></video>
+            <div class="overlay">
+                <div class="face-outline"></div>
+                <div class="forehead-box" id="foreheadBox"></div>
+                <div class="timer" id="timer">30</div>
+            </div>
+        </div>
+        
+        <button class="btn-primary" id="startBtn" onclick="handleStart()">
+            开始检测
+        </button>
+        
+        <div class="result-box">
+            <div class="heart-rate" id="heartRate">
+                --<span>BPM</span>
+                <span class="heart-icon" id="heartIcon" style="display:none;">❤️</span>
+            </div>
+            <canvas class="wave-canvas" id="waveCanvas"></canvas>
+        </div>
+        
+        <div class="info-box">
+            <strong>使用说明：</strong><br>
+            • 确保光线充足<br>
+            • 将脸部对准框内<br>
+            • 保持静止30秒<br>
+            • 检测结果仅供参考
+        </div>
+    </div>
+    
+    <div class="show-debug" onclick="toggleDebug()">调试</div>
+    <div class="debug-info" id="debugInfo"></div>
+    
+    <script>
+        // 全局变量
+        let video = null;
+        let stream = null;
+        let canvas = null;
+        let ctx = null;
+        let measuring = false;
+        let measureTimer = null;
+        let samples = [];
+        let frameCount = 0;
+        let startTime = null;
+        
+        // 调试日志
+        function log(message, type = 'info') {
+            console.log(`[${type}] ${message}`);
+            const debugInfo = document.getElementById('debugInfo');
+            const time = new Date().toLocaleTimeString();
+            debugInfo.innerHTML = `${time} - ${message}<br>` + debugInfo.innerHTML;
+        }
+        
+        function toggleDebug() {
+            const debug = document.getElementById('debugInfo');
+            debug.style.display = debug.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // 初始化
+        function init() {
+            video = document.getElementById('video');
+            canvas = document.createElement('canvas');
+            ctx = canvas.getContext('2d');
+            
+            // 设备信息
+            const ua = navigator.userAgent;
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
+            const isIOS = /iPhone|iPad|iPod/i.test(ua);
+            const isAndroid = /Android/i.test(ua);
+            const isWeChat = /MicroMessenger/i.test(ua);
+            
+            log(`设备: ${isMobile ? (isIOS ? 'iOS' : 'Android') : 'PC'}`);
+            log(`浏览器: ${isWeChat ? '微信内置' : '普通浏览器'}`);
+            log(`协议: ${location.protocol}`);
+            
+            // 检查支持
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                updateStatus('浏览器不支持摄像头', 'error');
+                document.getElementById('startBtn').disabled = true;
+                log('浏览器不支持getUserMedia', 'error');
+                return;
+            }
+            
+            // HTTPS检查
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                updateStatus('需要HTTPS访问', 'error');
+                log('非HTTPS环境', 'error');
+            }
+            
+            // 初始化波形图
+            initWaveform();
+        }
+        
+        // 处理开始按钮
+        async function handleStart() {
+            if (!measuring) {
+                await startDetection();
+            } else {
+                stopDetection();
+            }
+        }
+        
+        // 开始检测
+        async function startDetection() {
+            try {
+                log('开始获取摄像头权限');
+                updateStatus('正在打开摄像头...', 'info');
+                
+                // 尝试不同的参数组合
+                const constraintsList = [
+                    // 1. 最简单的参数
+                    { video: true, audio: false },
+                    // 2. 指定前置摄像头
+                    { video: { facingMode: 'user' }, audio: false },
+                    // 3. 带分辨率的参数
+                    { 
+                        video: { 
+                            facingMode: 'user',
+                            width: { ideal: 640 },
+                            height: { ideal: 480 }
+                        }, 
+                        audio: false 
+                    }
+                ];
+                
+                let success = false;
+                let lastError = null;
+                
+                // 依次尝试不同的参数
+                for (let i = 0; i < constraintsList.length; i++) {
+                    try {
+                        log(`尝试参数组合 ${i + 1}`);
+                        stream = await navigator.mediaDevices.getUserMedia(constraintsList[i]);
+                        success = true;
+                        log(`参数组合 ${i + 1} 成功`);
+                        break;
+                    } catch (err) {
+                        lastError = err;
+                        log(`参数组合 ${i + 1} 失败: ${err.name}`, 'error');
+                    }
+                }
+                
+                if (!success) {
+                    throw lastError;
+                }
+                
+                // 设置视频流
+                video.srcObject = stream;
+                
+                // 等待视频准备就绪
+                await new Promise((resolve, reject) => {
+                    video.onloadedmetadata = () => {
+                        log('视频元数据加载完成');
+                        video.play()
+                            .then(() => {
+                                log('视频播放成功');
+                                resolve();
+                            })
+                            .catch(err => {
+                                log('视频播放失败', 'error');
+                                reject(err);
+                            });
+                    };
+                    
+                    setTimeout(() => reject(new Error('视频加载超时')), 10000);
+                });
+                
+                // 设置画布尺寸
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                log(`视频尺寸: ${canvas.width}x${canvas.height}`);
+                
+                // 开始测量
+                measuring = true;
+                samples = [];
+                frameCount = 0;
+                startTime = Date.now();
+                
+                document.getElementById('startBtn').textContent = '停止检测';
+                document.getElementById('startBtn').classList.add('stop');
+                document.getElementById('foreheadBox').style.display = 'block';
+                document.getElementById('timer').style.display = 'block';
+                
+                updateStatus('检测中，请保持静止...', 'warning');
+                
+                // 启动定时器
+                let timeLeft = 30;
+                measureTimer = setInterval(() => {
+                    timeLeft--;
+                    document.getElementById('timer').textContent = timeLeft;
+                    
+                    if (timeLeft <= 0) {
+                        stopDetection();
+                    }
+                }, 1000);
+                
+                // 开始捕获
+                captureFrame();
+                
+            } catch (error) {
+                log(`错误: ${error.name} - ${error.message}`, 'error');
+                
+                let errorMsg = '无法打开摄像头';
+                if (error.name === 'NotAllowedError') {
+                    errorMsg = '请允许摄像头权限';
+                } else if (error.name === 'NotFoundError') {
+                    errorMsg = '未找到摄像头设备';
+                } else if (error.name === 'NotReadableError') {
+                    errorMsg = '摄像头被占用';
+                }
+                
+                updateStatus(errorMsg, 'error');
+                stopDetection();
+            }
+        }
+        
+        // 停止检测
+        function stopDetection() {
+            measuring = false;
+            
+            if (measureTimer) {
+                clearInterval(measureTimer);
+                measureTimer = null;
+            }
+            
+            if (stream) {
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                    log('停止媒体轨道');
+                });
+                stream = null;
+            }
+            
+            video.srcObject = null;
+            
+            document.getElementById('startBtn').textContent = '开始检测';
+            document.getElementById('startBtn').classList.remove('stop');
+            document.getElementById('foreheadBox').style.display = 'none';
+            document.getElementById('timer').style.display = 'none';
+            
+            if (samples.length > 150) {
+                calculateHeartRate();
+            } else {
+                updateStatus('检测已停止', 'info');
+            }
+        }
+        
+        // 捕获帧
+        function captureFrame() {
+            if (!measuring) return;
+            
+            frameCount++;
+            
+            try {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // 获取前额区域
+                const x = canvas.width * 0.35;
+                const y = canvas.height * 0.1;
+                const w = canvas.width * 0.3;
+                const h = canvas.height * 0.15;
+                
+                const imageData = ctx.getImageData(x, y, w, h);
+                const data = imageData.data;
+                
+                // 计算绿色通道平均值
+                let sum = 0;
+                let count = 0;
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    
+                    // 简单的肤色过滤
+                    if (r > 50 && g > 30 && b > 20) {
+                        sum += g;
+                        count++;
+                    }
+                }
+                
+                if (count > 0) {
+                    const avg = sum / count;
+                    samples.push(avg);
+                    
+                    // 保持样本数量
+                    if (samples.length > 900) { // 30秒 * 30fps
+                        samples.shift();
+                    }
+                    
+                    // 更新波形
+                    if (frameCount % 5 === 0) {
+                        drawWaveform();
+                    }
+                    
+                    // 定期计算心率
+                    if (samples.length > 150 && frameCount % 150 === 0) {
+                        const hr = quickCalculateHR();
+                        if (hr > 0) {
+                            updateHeartRate(hr);
+                        }
+                    }
+                }
+                
+            } catch (err) {
+                log(`帧处理错误: ${err.message}`, 'error');
+            }
+            
+            // 继续下一帧
+            requestAnimationFrame(captureFrame);
+        }
+        
+        // 快速计算心率
+        function quickCalculateHR() {
+            if (samples.length < 150) return 0;
+            
+            // 取最近5秒的数据
+            const recent = samples.slice(-150);
+            
+            // 去趋势
+            const mean = recent.reduce((a, b) => a + b) / recent.length;
+            const detrended = recent.map(x => x - mean);
+            
+            // 找峰值
+            const peaks = [];
+            for (let i = 15; i < detrended.length - 15; i++) {
+                if (detrended[i] > detrended[i-1] && 
+                    detrended[i] > detrended[i+1] &&
+                    detrended[i] > 0) {
+                    peaks.push(i);
+                    i += 15; // 跳过0.5秒
+                }
+            }
+            
+            if (peaks.length < 2) return 0;
+            
+            // 计算间隔
+            let totalInterval = 0;
+            for (let i = 1; i < peaks.length; i++) {
+                totalInterval += peaks[i] - peaks[i-1];
+            }
+            
+            const avgInterval = totalInterval / (peaks.length - 1);
+            const hr = Math.round(60 * 30 / avgInterval); // 30fps
+            
+            return (hr > 50 && hr < 120) ? hr : 0;
+        }
+        
+        // 最终计算心率
+        function calculateHeartRate() {
+            updateStatus('正在分析数据...', 'info');
+            
+            // 实际帧率
+            const duration = (Date.now() - startTime) / 1000;
+            const fps = frameCount / duration;
+            log(`实际帧率: ${fps.toFixed(1)} fps`);
+            
+            // 分段计算
+            const segmentSize = Math.floor(fps * 5); // 5秒
+            const results = [];
+            
+            for (let i = 0; i < samples.length - segmentSize; i += Math.floor(fps)) {
+                const segment = samples.slice(i, i + segmentSize);
+                const hr = calculateSegmentHR(segment, fps);
+                if (hr > 0) results.push(hr);
+            }
+            
+            if (results.length === 0) {
+                updateStatus('检测失败，请重试', 'error');
+                return;
+            }
+            
+            // 计算最终结果
+            results.sort((a, b) => a - b);
+            const middle = results[Math.floor(results.length / 2)];
+            
+            updateHeartRate(middle);
+            updateStatus('检测完成！', 'success');
+        }
+        
+        // 计算片段心率
+        function calculateSegmentHR(data, fps) {
+            // 去趋势
+            const mean = data.reduce((a, b) => a + b) / data.length;
+            const normalized = data.map(x => x - mean);
+            
+            // 简单峰值检测
+            const minDistance = Math.floor(fps * 0.5); // 0.5秒
+            const peaks = [];
+            
+            for (let i = minDistance; i < normalized.length - minDistance; i++) {
+                let isPeak = true;
+                for (let j = i - minDistance; j <= i + minDistance; j++) {
+                    if (j !== i && normalized[j] >= normalized[i]) {
+                        isPeak = false;
+                        break;
+                    }
+                }
+                
+                if (isPeak && normalized[i] > 0) {
+                    peaks.push(i);
+                    i += minDistance;
+                }
+            }
+            
+            if (peaks.length < 3) return 0;
+            
+            // 计算平均间隔
+            const intervals = [];
+            for (let i = 1; i < peaks.length; i++) {
+                intervals.push((peaks[i] - peaks[i-1]) / fps);
+            }
+            
+            const avgInterval = intervals.reduce((a, b) => a + b) / intervals.length;
+            const hr = Math.round(60 / avgInterval);
+            
+            return (hr >= 50 && hr <= 120) ? hr : 0;
+        }
+        
+        // 初始化波形图
+        function initWaveform() {
+            const canvas = document.getElementById('waveCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            // 画中线
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+        }
+        
+        // 绘制波形
+        function drawWaveform() {
+            const canvas = document.getElementById('waveCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (samples.length < 2) return;
+            
+            // 显示最近3秒
+            const displaySamples = samples.slice(-90);
+            
+            // 归一化
+            const mean = displaySamples.reduce((a, b) => a + b) / displaySamples.length;
+            const normalized = displaySamples.map(x => x - mean);
+            const max = Math.max(...normalized.map(Math.abs)) || 1;
+            
+            // 绘制
+            ctx.strokeStyle = '#5b68d8';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            for (let i = 0; i < normalized.length; i++) {
+                const x = (i / (normalized.length - 1)) * canvas.width;
+                const y = canvas.height / 2 - (normalized[i] / max) * canvas.height * 0.3;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+        }
+        
+        // 更新心率显示
+        function updateHeartRate(hr) {
+            document.getElementById('heartRate').innerHTML = `${hr}<span>BPM</span>`;
+            document.getElementById('heartIcon').style.display = 'inline-block';
+            
+            const duration = 60 / hr;
+            document.getElementById('heartIcon').style.animationDuration = `${duration}s`;
+        }
+        
+        // 更新状态
+        function updateStatus(msg, type) {
+            const status = document.getElementById('status');
+            status.textContent = msg;
+            status.className = `status ${type}`;
+        }
+        
+        // 页面加载完成
+        window.addEventListener('DOMContentLoaded', init);
+        
+        // 页面卸载
+        window.addEventListener('beforeunload', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>
