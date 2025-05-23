@@ -20,13 +20,13 @@
             align-items: center;
             justify-content: center;
             color: #333;
-            padding: 10px;
+            padding: 5px;
         }
         
         .container {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
-            padding: 20px;
+            padding: 15px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
             width: 100%;
             max-width: 500px;
@@ -35,22 +35,23 @@
         h1 {
             text-align: center;
             color: #5a67d8;
-            margin-bottom: 10px;
-            font-size: 24px;
+            margin-bottom: 5px;
+            font-size: 20px;
         }
         
         .subtitle {
             text-align: center;
             color: #718096;
-            margin-bottom: 20px;
-            font-size: 14px;
+            margin-bottom: 10px;
+            font-size: 12px;
         }
         
         .video-container {
             position: relative;
             width: 100%;
             aspect-ratio: 4/3;
-            margin: 0 auto 20px;
+            max-height: 250px;
+            margin: 0 auto 10px;
             border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -62,6 +63,8 @@
             height: 100%;
             object-fit: cover;
             display: block;
+            transform: scaleX(-1);
+            -webkit-transform: scaleX(-1);
         }
         
         .face-guide {
@@ -94,10 +97,10 @@
         
         .countdown-circle {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 60px;
-            height: 60px;
+            top: 5px;
+            right: 5px;
+            width: 50px;
+            height: 50px;
             display: none;
         }
         
@@ -108,13 +111,13 @@
         .countdown-bg {
             fill: none;
             stroke: rgba(255, 255, 255, 0.3);
-            stroke-width: 4;
+            stroke-width: 3;
         }
         
         .countdown-progress {
             fill: none;
             stroke: #4ade80;
-            stroke-width: 4;
+            stroke-width: 3;
             stroke-linecap: round;
             transition: stroke-dashoffset 0.5s linear;
         }
@@ -124,23 +127,23 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: white;
         }
         
         .controls {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         
         .main-button {
             background: #5a67d8;
             color: white;
             border: none;
-            padding: 15px 40px;
-            border-radius: 30px;
-            font-size: 18px;
+            padding: 12px 35px;
+            border-radius: 25px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -163,11 +166,11 @@
         
         .status {
             text-align: center;
-            padding: 12px;
+            padding: 8px;
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             font-weight: 500;
-            font-size: 14px;
+            font-size: 13px;
         }
         
         .status.info { background: #bee3f8; color: #2c5282; }
@@ -178,9 +181,9 @@
         .results {
             background: #f7fafc;
             border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            min-height: 200px;
+            padding: 15px;
+            margin-bottom: 10px;
+            min-height: 150px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -188,15 +191,15 @@
         
         .heart-rate-display {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         
         .heart-rate-value {
-            font-size: 56px;
+            font-size: 48px;
             font-weight: bold;
             color: #e53e3e;
             display: inline-block;
-            min-width: 120px;
+            min-width: 100px;
         }
         
         .heart-rate-unit {
@@ -221,8 +224,8 @@
         }
         
         .wave-container {
-            height: 100px;
-            margin-top: 10px;
+            height: 80px;
+            margin-top: 5px;
         }
         
         #waveCanvas {
@@ -235,28 +238,29 @@
         .instructions {
             background: #f7fafc;
             border-radius: 10px;
-            padding: 15px;
-            margin-top: 20px;
-            font-size: 14px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 12px;
         }
         
         .instructions-title {
             font-weight: 600;
             color: #5a67d8;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            font-size: 13px;
         }
         
         .instructions-list {
-            line-height: 1.8;
+            line-height: 1.5;
             color: #4a5568;
         }
         
         .disclaimer {
-            margin-top: 15px;
-            padding-top: 15px;
+            margin-top: 10px;
+            padding-top: 10px;
             border-top: 1px solid #e2e8f0;
             color: #e53e3e;
-            font-size: 13px;
+            font-size: 11px;
             text-align: center;
         }
         
@@ -318,16 +322,49 @@
                 padding: 5px;
             }
             
+            .container {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                padding: 10px;
+            }
+            
             .video-container {
-                aspect-ratio: 16/9;
+                width: 45%;
+                max-height: 180px;
+                margin-right: 10px;
+            }
+            
+            .controls {
+                width: 45%;
+                order: 2;
             }
             
             .results {
-                min-height: 150px;
+                width: 45%;
+                min-height: 100px;
+                order: 3;
+            }
+            
+            .instructions {
+                width: 100%;
+                order: 4;
+                margin-top: 5px;
+            }
+            
+            .status {
+                width: 100%;
+                order: -1;
+                margin-bottom: 5px;
+            }
+            
+            h1, .subtitle {
+                width: 100%;
+                margin-bottom: 5px;
             }
             
             .wave-container {
-                height: 60px;
+                height: 50px;
             }
         }
     </style>
@@ -346,9 +383,9 @@
             <div class="face-guide"></div>
             <div class="roi-indicator" id="roiIndicator"></div>
             <div class="countdown-circle" id="countdownCircle">
-                <svg width="60" height="60" class="countdown-svg">
-                    <circle cx="30" cy="30" r="28" class="countdown-bg"></circle>
-                    <circle cx="30" cy="30" r="28" class="countdown-progress" id="countdownProgress"></circle>
+                <svg width="50" height="50" class="countdown-svg">
+                    <circle cx="25" cy="25" r="23" class="countdown-bg"></circle>
+                    <circle cx="25" cy="25" r="23" class="countdown-progress" id="countdownProgress"></circle>
                 </svg>
                 <div class="countdown-text" id="countdownText">30</div>
             </div>
@@ -381,7 +418,7 @@
             <div class="disclaimer">
                 ⚠️ <strong>免责声明：</strong>仅供参考，不能替代医疗设备
             </div>
-            <div id="mobileHint" style="display: none; margin-top: 10px; padding: 10px; background: #feebc8; color: #975a16; border-radius: 5px; font-size: 13px;">
+            <div id="mobileHint" style="display: none; margin-top: 8px; padding: 8px; background: #feebc8; color: #975a16; border-radius: 5px; font-size: 11px;">
                 📱 <strong>手机用户注意：</strong><br>
                 • 请确保使用HTTPS访问<br>
                 • 微信内请点击"..."选择"在浏览器打开"<br>
